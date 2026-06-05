@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -30,7 +30,7 @@ const Pagination = ({ page, totalPages }: PaginationProps) => {
           page <= 1 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'
         )}
       >
-        <Image src="/icons/arrow-left.svg" width={16} height={16} alt="arrow" />
+        <ArrowLeft className="h-4 w-4" />
         Prev
       </button>
       <p className="text-14 flex items-center px-2">
@@ -45,7 +45,7 @@ const Pagination = ({ page, totalPages }: PaginationProps) => {
         )}
       >
         Next
-        <Image src="/icons/arrow-left.svg" width={16} height={16} alt="arrow" className="rotate-180" />
+        <ArrowRight className="h-4 w-4" />
       </button>
     </div>
   );

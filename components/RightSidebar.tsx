@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import BankCard from './BankCard';
 import { countTransactionCategories } from '@/lib/utils';
 import Category from './Category';
@@ -38,7 +38,7 @@ const RightSidebar = ({
         <div className="flex w-full justify-between">
           <h2 className="header-2">My Banks</h2>
           <Link href="/my-banks" className="flex gap-2">
-            <Image src="/icons/plus.svg" width={20} height={20} alt="plus" />
+            <Plus className="h-5 w-5 text-gray-600" />
             <h2 className="text-14 font-semibold text-gray-600">Add bank</h2>
           </Link>
         </div>

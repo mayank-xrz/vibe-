@@ -1,8 +1,8 @@
 'use client';
 
 import { logoutAccount } from '@/lib/actions/user.actions';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 
 const Footer = ({ user, type = 'desktop' }: { user: User; type?: 'mobile' | 'desktop' }) => {
   const router = useRouter();
@@ -25,9 +25,14 @@ const Footer = ({ user, type = 'desktop' }: { user: User; type?: 'mobile' | 'des
         </h1>
         <p className="text-14 truncate font-normal text-gray-600">{user?.email}</p>
       </div>
-      <div className="footer_image" onClick={handleLogOut} style={{ cursor: 'pointer' }}>
-        <Image src="/icons/logout.svg" fill alt="logout" />
-      </div>
+      <button
+        type="button"
+        className="footer_image flex-center"
+        onClick={handleLogOut}
+        aria-label="Log out"
+      >
+        <LogOut className="h-5 w-5 text-gray-600" />
+      </button>
     </footer>
   );
 };

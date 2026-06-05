@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
+import { Check, Copy as CopyIcon } from 'lucide-react';
 import { formatAmount } from '@/lib/utils';
 
 interface BankCardProps {
@@ -26,12 +27,11 @@ const Copy = ({ title }: { title: string }) => {
       className="flex cursor-pointer gap-1.5 items-center ml-2"
       title="Copy"
     >
-      <Image
-        src={hasCopied ? '/icons/copied.svg' : '/icons/copy.svg'}
-        width={20}
-        height={20}
-        alt="copy"
-      />
+      {hasCopied ? (
+        <Check className="h-4 w-4 text-green-600" />
+      ) : (
+        <CopyIcon className="h-4 w-4 text-gray-600" />
+      )}
     </button>
   );
 };
