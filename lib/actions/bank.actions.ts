@@ -293,6 +293,8 @@ export async function createTransaction(transaction: {
         ...transaction,
       }
     );
+    // Refresh dashboard balances/transactions after a successful transfer.
+    revalidatePath('/');
     return parseStringify(newTransaction);
   } catch {
     return null;

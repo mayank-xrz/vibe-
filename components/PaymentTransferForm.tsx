@@ -12,6 +12,7 @@ import { decryptId } from '@/lib/utils';
 import BankDropdown from './BankDropdown';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const transferSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -26,6 +27,7 @@ type TransferFormValues = z.infer<typeof transferSchema>;
 const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<TransferFormValues>({
     resolver: zodResolver(transferSchema),
@@ -46,7 +48,11 @@ const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
       const senderBank = await getBank({ documentId: data.senderBank });
 
       if (!receiverBank || !senderBank) {
-        alert('Could not find bank account. Please check the sharable ID.');
+        toast({
+          variant: 'destructive',
+          title: 'Transfer failed',
+          description: 'Could not find bank account. Please check the sharable ID.',
+        });
         return;
       }
 
@@ -69,11 +75,22 @@ const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
           email: data.email,
         });
 
+        toast({
+          variant: 'success',
+          title: 'Transfer complete',
+          description: 'Your funds are on the way.',
+        });
+
         form.reset();
         router.push('/');
       }
     } catch (error) {
       console.error('Transfer error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Transfer failed',
+        description: 'Something went wrong. Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }

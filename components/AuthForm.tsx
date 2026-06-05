@@ -13,12 +13,14 @@ import CustomInput from './CustomInput';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const AuthForm = ({ type }: { type: string }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { toast } = useToast();
 
   const formSchema = authFormSchema(type);
   type FormValues = z.infer<ReturnType<typeof authFormSchema>>;
@@ -50,20 +52,45 @@ const AuthForm = ({ type }: { type: string }) => {
         };
         const newUser = await signUp(userData);
         if (newUser) {
+          toast({
+            variant: 'success',
+            title: 'Account created',
+            description: 'Welcome to Horizon!',
+          });
           router.push('/');
         } else {
           setError('Sign up failed. Please try again.');
+          toast({
+            variant: 'destructive',
+            title: 'Sign up failed',
+            description: 'Please try again.',
+          });
         }
       } else {
         const response = await signIn({ email: data.email, password: data.password });
         if (response) {
+          toast({
+            variant: 'success',
+            title: 'Signed in',
+            description: 'Welcome back!',
+          });
           router.push('/');
         } else {
           setError('Invalid email or password.');
+          toast({
+            variant: 'destructive',
+            title: 'Sign in failed',
+            description: 'Invalid email or password.',
+          });
         }
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
+      toast({
+        variant: 'destructive',
+        title: 'Something went wrong',
+        description: 'Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }
