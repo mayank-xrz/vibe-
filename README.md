@@ -133,6 +133,40 @@ When prompted by the Plaid Link UI:
 ### Dwolla Sandbox
 All transfers in sandbox mode are simulated. No real money moves.
 
+## Test account
+
+For repeated testing you can seed one ordinary test user instead of filling
+out the sign-up form by hand each time.
+
+> There is **no master/admin login and no auth backdoor**. The seed script
+> creates a normal user through the *exact same* flow a real user goes through
+> (Appwrite Auth → Dwolla customer → Users document). That user then logs in via
+> the normal `/sign-in` page like any other account.
+
+1. Add your chosen credentials to `.env.local` (placeholders are in
+   `.env.example` — never commit real values):
+
+   ```env
+   SEED_USER_EMAIL=testuser@example.com
+   SEED_USER_PASSWORD=Test1234!
+   ```
+
+   The Appwrite and Dwolla values in `.env.local` must be **real sandbox
+   credentials** for seeding to succeed.
+
+2. Run the seed script:
+
+   ```bash
+   npm run seed
+   ```
+
+   It is **idempotent** — if a user with that email already exists it skips
+   creation. On success (or skip) it prints the email/password to log in with.
+   If any step fails midway it rolls back the partial state (deletes the
+   Appwrite account, deactivates the Dwolla customer).
+
+3. Go to `/sign-in` and log in with `SEED_USER_EMAIL` / `SEED_USER_PASSWORD`.
+
 ## Architecture
 
 ```

@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "tsx scripts/seed-user.ts"
   },
   "repository": {
     "type": "git",
@@ -50,5 +54,11 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.3",
+    "tsx": "^4.22.4"
   }
 }
