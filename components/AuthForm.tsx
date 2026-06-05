@@ -85,6 +85,9 @@ const AuthForm = ({ type }: { type: string }) => {
         }
       }
     } catch (err) {
+      // Server Actions log the real cause server-side (Netlify function logs).
+      // Surface whatever reached the client too, to aid local debugging.
+      console.error('Auth submit error:', err);
       setError('An error occurred. Please try again.');
       toast({
         variant: 'destructive',

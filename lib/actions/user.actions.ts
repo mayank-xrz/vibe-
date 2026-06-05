@@ -3,7 +3,7 @@
 import { ID, Query } from 'node-appwrite';
 import { createAdminClient, createSessionClient } from '../server/appwrite';
 import { cookies } from 'next/headers';
-import { parseStringify } from '../utils';
+import { parseStringify, formatDateOfBirth, assertRequiredEnv } from '../utils';
 import { createDwollaCustomer, deactivateDwollaCustomer } from './dwolla.actions';
 import { redirect } from 'next/navigation';
 
@@ -78,9 +78,26 @@ export async function signUp({ password, ...userData }: SignUpParams) {
   let dwollaCustomerUrl: string | null = null;
   let newUserDocId: string | null = null;
 
-  const { account, database, users } = await createAdminClient();
-
   try {
+    // 0. Fail fast with a clear message if anything the flow needs is unset.
+    assertRequiredEnv([
+      'NEXT_PUBLIC_APPWRITE_ENDPOINT',
+      'NEXT_PUBLIC_APPWRITE_PROJECT',
+      'NEXT_APPWRITE_KEY',
+      'APPWRITE_DATABASE_ID',
+      'APPWRITE_USER_COLLECTION_ID',
+      'DWOLLA_KEY',
+      'DWOLLA_SECRET',
+    ]);
+
+    // Dwolla requires dateOfBirth as YYYY-MM-DD. The form may send it as bare
+    // digits (e.g. "28122000") — normalize/validate before any resource is
+    // created so a bad date fails cheaply, before the Appwrite account exists.
+    const dateOfBirth = formatDateOfBirth(userData.dateOfBirth);
+    const normalizedUserData = { ...userData, dateOfBirth };
+
+    const { account, database } = await createAdminClient();
+
     // 1. Appwrite Auth account
     const newUserAccount = await account.create(
       ID.unique(),
@@ -93,7 +110,7 @@ export async function signUp({ password, ...userData }: SignUpParams) {
 
     // 2. Dwolla customer (KYC). Compensated by deactivation on later failure.
     dwollaCustomerUrl = await createDwollaCustomer({
-      ...userData,
+      ...normalizedUserData,
       type: 'personal',
     });
     if (!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer');
@@ -106,7 +123,7 @@ export async function signUp({ password, ...userData }: SignUpParams) {
       USER_COLLECTION_ID!,
       ID.unique(),
       {
-        ...userData,
+        ...normalizedUserData,
         userId: newUserAccount.$id,
         dwollaCustomerId,
         dwollaCustomerUrl,
@@ -126,27 +143,42 @@ export async function signUp({ password, ...userData }: SignUpParams) {
     });
 
     return parseStringify(newUser);
-  } catch (error) {
-    console.error('Sign up error, rolling back partial state:', error);
+  } catch (error: any) {
+    // Log the FULL underlying error so the real Appwrite/Dwolla message shows
+    // up in the Netlify function logs (not the generic UI string).
+    console.error('Sign up failed — underlying error:', {
+      message: error?.message,
+      status: error?.status ?? error?.code,
+      type: error?.type,
+      body: error?.body ? JSON.stringify(error.body) : undefined,
+      stack: error?.stack,
+    });
 
-    // Compensating deletes in reverse creation order. Each is best-effort and
-    // must not mask the original error.
-    if (newUserDocId) {
-      try {
-        await database.deleteDocument(DATABASE_ID!, USER_COLLECTION_ID!, newUserDocId);
-      } catch (e) {
-        console.error('Rollback: failed to delete user document', e);
+    // Compensating deletes in reverse creation order so a failed attempt never
+    // leaves an orphaned Appwrite account that would block retrying with the
+    // same email. Each step is best-effort and must not mask the original error.
+    try {
+      const { database, users } = await createAdminClient();
+
+      if (newUserDocId) {
+        try {
+          await database.deleteDocument(DATABASE_ID!, USER_COLLECTION_ID!, newUserDocId);
+        } catch (e) {
+          console.error('Rollback: failed to delete user document', e);
+        }
       }
-    }
-    if (dwollaCustomerUrl) {
-      await deactivateDwollaCustomer(dwollaCustomerUrl);
-    }
-    if (newUserAccountId) {
-      try {
-        await users.delete(newUserAccountId);
-      } catch (e) {
-        console.error('Rollback: failed to delete Appwrite account', e);
+      if (dwollaCustomerUrl) {
+        await deactivateDwollaCustomer(dwollaCustomerUrl);
       }
+      if (newUserAccountId) {
+        try {
+          await users.delete(newUserAccountId);
+        } catch (e) {
+          console.error('Rollback: failed to delete Appwrite account', e);
+        }
+      }
+    } catch (rollbackErr) {
+      console.error('Rollback: could not initialize admin client', rollbackErr);
     }
 
     return null;

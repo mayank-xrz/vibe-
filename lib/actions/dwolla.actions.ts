@@ -19,9 +19,18 @@ export async function createDwollaCustomer(newCustomer: NewDwollaCustomerParams)
     const client = getDwollaClient();
     const res = await client.post('customers', newCustomer);
     return res.headers.get('location');
-  } catch (err) {
-    console.error('Creating Dwolla customer failed:', err);
-    return null;
+  } catch (err: any) {
+    // Dwolla returns a structured validation body (err.body._embedded.errors)
+    // describing exactly which field/format was rejected (e.g. dateOfBirth).
+    // Log the full detail so it lands in the Netlify function logs, then
+    // re-throw so the signUp flow can roll back and surface the real cause.
+    console.error('Creating Dwolla customer failed:', {
+      message: err?.message,
+      status: err?.status,
+      body: err?.body ? JSON.stringify(err.body) : undefined,
+      validationErrors: err?.body?._embedded?.errors,
+    });
+    throw err;
   }
 }
 
