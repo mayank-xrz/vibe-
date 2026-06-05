@@ -4,7 +4,7 @@ import { ID, Query } from 'node-appwrite';
 import { createAdminClient, createSessionClient } from '../server/appwrite';
 import { cookies } from 'next/headers';
 import { parseStringify } from '../utils';
-import { createDwollaCustomer } from './dwolla.actions';
+import { createDwollaCustomer, deactivateDwollaCustomer } from './dwolla.actions';
 import { redirect } from 'next/navigation';
 
 const {
@@ -60,31 +60,47 @@ export async function signIn({ email, password }: { email: string; password: str
   }
 }
 
+/**
+ * Atomic signup. The sequence is:
+ *   1. Appwrite Auth account
+ *   2. Dwolla customer (full KYC)
+ *   3. Users DB document (stores dwollaCustomerUrl/Id)
+ *   4. Session + HTTP-only cookie
+ *
+ * If any step after a resource is created fails, we run compensating
+ * rollbacks (delete the Appwrite account, deactivate the Dwolla customer,
+ * delete the DB document) so we never leave orphaned records, then re-throw.
+ */
 export async function signUp({ password, ...userData }: SignUpParams) {
   const { email, firstName, lastName } = userData;
-  let newUserAccount;
+
+  let newUserAccountId: string | null = null;
+  let dwollaCustomerUrl: string | null = null;
+  let newUserDocId: string | null = null;
+
+  const { account, database, users } = await createAdminClient();
 
   try {
-    const { account, database } = await createAdminClient();
-
-    newUserAccount = await account.create(
+    // 1. Appwrite Auth account
+    const newUserAccount = await account.create(
       ID.unique(),
       email,
       password,
       `${firstName} ${lastName}`
     );
-
     if (!newUserAccount) throw new Error('Error creating user account');
+    newUserAccountId = newUserAccount.$id;
 
-    const dwollaCustomerUrl = await createDwollaCustomer({
+    // 2. Dwolla customer (KYC). Compensated by deactivation on later failure.
+    dwollaCustomerUrl = await createDwollaCustomer({
       ...userData,
       type: 'personal',
     });
-
     if (!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer');
 
     const dwollaCustomerId = dwollaCustomerUrl.split('/').pop()!;
 
+    // 3. Users DB document
     const newUser = await database.createDocument(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
@@ -96,7 +112,9 @@ export async function signUp({ password, ...userData }: SignUpParams) {
         dwollaCustomerUrl,
       }
     );
+    newUserDocId = newUser.$id;
 
+    // 4. Session + cookie
     const session = await account.createEmailPasswordSession(email, password);
 
     const cookieStore = await cookies();
@@ -109,18 +127,28 @@ export async function signUp({ password, ...userData }: SignUpParams) {
 
     return parseStringify(newUser);
   } catch (error) {
-    // Compensating delete: remove appwrite account if a later step failed
-    if (newUserAccount?.$id) {
-      const { account } = await createAdminClient();
+    console.error('Sign up error, rolling back partial state:', error);
+
+    // Compensating deletes in reverse creation order. Each is best-effort and
+    // must not mask the original error.
+    if (newUserDocId) {
       try {
-        // Note: requires admin Users service, not Account service
-        // We log but don't block on cleanup failure
-        console.error('Sign up failed, partial data may exist for userId:', newUserAccount.$id);
-      } catch (cleanupError) {
-        console.error('Cleanup error:', cleanupError);
+        await database.deleteDocument(DATABASE_ID!, USER_COLLECTION_ID!, newUserDocId);
+      } catch (e) {
+        console.error('Rollback: failed to delete user document', e);
       }
     }
-    console.error('Sign up error:', error);
+    if (dwollaCustomerUrl) {
+      await deactivateDwollaCustomer(dwollaCustomerUrl);
+    }
+    if (newUserAccountId) {
+      try {
+        await users.delete(newUserAccountId);
+      } catch (e) {
+        console.error('Rollback: failed to delete Appwrite account', e);
+      }
+    }
+
     return null;
   }
 }

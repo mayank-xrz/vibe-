@@ -40,6 +40,20 @@ export async function createFundingSource(params: AddFundingSourceParams) {
   }
 }
 
+// Compensating action for atomic signup: Dwolla customers cannot be hard
+// deleted, but they can be deactivated/suspended. We POST a status update to
+// roll back a customer created earlier in a signup flow that later failed.
+export async function deactivateDwollaCustomer(dwollaCustomerUrl: string) {
+  try {
+    const client = getDwollaClient();
+    await client.post(dwollaCustomerUrl, { status: 'deactivated' });
+    return true;
+  } catch (err) {
+    console.error('Deactivating Dwolla customer failed:', err);
+    return false;
+  }
+}
+
 export async function createTransfer(params: TransferParams) {
   try {
     const client = getDwollaClient();

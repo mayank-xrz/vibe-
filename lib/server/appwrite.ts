@@ -1,6 +1,6 @@
 'use server';
 
-import { Client, Account, Databases } from 'node-appwrite';
+import { Client, Account, Databases, Users } from 'node-appwrite';
 import { cookies } from 'next/headers';
 
 const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
@@ -25,6 +25,7 @@ export async function createSessionClient() {
   return {
     get account() { return new Account(client); },
     get database() { return new Databases(client); },
+    get users() { return new Users(client); },
   };
 }
 
@@ -39,5 +40,6 @@ export async function createAdminClient() {
   return {
     get account() { return new Account(client); },
     get database() { return new Databases(client); },
+    get users() { return new Users(client); },
   };
 }
