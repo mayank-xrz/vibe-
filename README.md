@@ -65,6 +65,76 @@ Fill in the values:
 1. Create a project at [sentry.io](https://sentry.io)
 2. Copy the DSN to `SENTRY_DSN`
 
+---
+
+## Environment Variables
+
+Complete reference for every environment variable the application reads.
+Add these in **Netlify → Site settings → Environment variables** (or GitHub → Settings → Secrets and variables → Actions for CI).
+
+> **Never commit real secrets.** `.env.local` is git-ignored. Use `.env.example` as a template.
+
+### Appwrite
+
+| Variable | Example value | Where to find it |
+|---|---|---|
+| `NEXT_PUBLIC_APPWRITE_ENDPOINT` | `https://cloud.appwrite.io/v1` | Fixed — Appwrite Cloud base URL |
+| `NEXT_PUBLIC_APPWRITE_PROJECT` | `64f3a1b2c3d4e5f6a7b8c9d0` | [cloud.appwrite.io](https://cloud.appwrite.io) → your project → Settings → Project ID |
+| `NEXT_APPWRITE_KEY` | `standard_abc123...` | Project → Settings → API Keys → Create key (All scopes) |
+| `APPWRITE_DATABASE_ID` | `64f3a1b2c3d4e5f6a7b8c9d1` | Databases → your database → Settings → Database ID |
+| `APPWRITE_USER_COLLECTION_ID` | `64f3a1b2c3d4e5f6a7b8c9d2` | Databases → your database → Users collection → Settings → Collection ID |
+| `APPWRITE_BANK_COLLECTION_ID` | `64f3a1b2c3d4e5f6a7b8c9d3` | Databases → your database → Banks collection → Settings → Collection ID |
+| `APPWRITE_TRANSACTION_COLLECTION_ID` | `64f3a1b2c3d4e5f6a7b8c9d4` | Databases → your database → Transactions collection → Settings → Collection ID |
+
+### Plaid
+
+| Variable | Example value | Where to find it |
+|---|---|---|
+| `PLAID_CLIENT_ID` | `63f1a2b3c4d5e6f7a8b9c0d1` | [dashboard.plaid.com](https://dashboard.plaid.com) → Team Settings → Keys → Client ID |
+| `PLAID_SECRET` | `abc123def456ghi789jkl012` | Dashboard → Team Settings → Keys → Sandbox secret |
+| `PLAID_ENV` | `sandbox` | `sandbox` for development, `production` for live |
+| `PLAID_PRODUCTS` | `auth,transactions,identity` | Comma-separated Plaid products to request |
+| `PLAID_COUNTRY_CODES` | `US,CA` | Comma-separated country codes |
+
+### Dwolla
+
+| Variable | Example value | Where to find it |
+|---|---|---|
+| `DWOLLA_KEY` | `AbCdEfGhIjKlMnOpQrStUvWxYz` | [accounts-sandbox.dwolla.com](https://accounts-sandbox.dwolla.com) → Applications → your app → Key |
+| `DWOLLA_SECRET` | `ZyXwVuTsRqPoNmLkJiHgFeDcBa` | Same page → Secret |
+| `DWOLLA_BASE_URL` | `https://api-sandbox.dwolla.com` | Fixed sandbox URL. Production: `https://api.dwolla.com` |
+| `DWOLLA_ENV` | `sandbox` | `sandbox` or `production` |
+
+### Sentry
+
+| Variable | Example value | Where to find it |
+|---|---|---|
+| `SENTRY_DSN` | `https://abc123@o123456.ingest.sentry.io/1234567` | [sentry.io](https://sentry.io) → your project → Settings → Client Keys (DSN) |
+
+### App
+
+| Variable | Example value | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | `https://singular-cannoli-323f40.netlify.app` | **Build-time** — must match your deployed URL. Use `http://localhost:3000` for local dev. |
+
+### Seed script (optional, local dev only)
+
+| Variable | Example value | Notes |
+|---|---|---|
+| `SEED_USER_EMAIL` | `testuser@example.com` | Used only by `npm run seed`. Never commit real values. |
+| `SEED_USER_PASSWORD` | `Test1234!` | Min 8 chars, 1 uppercase, 1 number. |
+
+### Build-time vs runtime
+
+`NEXT_PUBLIC_*` variables are **baked into the JavaScript bundle at build time**. If you change them in Netlify after a build you must redeploy for the change to take effect. All other variables are read at runtime on the server and can be updated without a rebuild.
+
+| Variable | When read |
+|---|---|
+| `NEXT_PUBLIC_APPWRITE_ENDPOINT` | Build time |
+| `NEXT_PUBLIC_APPWRITE_PROJECT` | Build time |
+| `NEXT_PUBLIC_SITE_URL` | Build time |
+| All others | Runtime (server only) |
+
 ### 3. Appwrite Database Setup
 
 Create a database and three collections:
