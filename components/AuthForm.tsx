@@ -51,7 +51,7 @@ const AuthForm = ({ type }: { type: string }) => {
           password: data.password,
         };
         const newUser = await signUp(userData);
-        if (newUser) {
+        if (newUser && !newUser.error) {
           toast({
             variant: 'success',
             title: 'Account created',
@@ -59,11 +59,12 @@ const AuthForm = ({ type }: { type: string }) => {
           });
           router.push('/');
         } else {
-          setError('Sign up failed. Please try again.');
+          const reason = newUser?.error || 'Please try again.';
+          setError(`Sign up failed: ${reason}`);
           toast({
             variant: 'destructive',
             title: 'Sign up failed',
-            description: 'Please try again.',
+            description: reason,
           });
         }
       } else {

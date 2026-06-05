@@ -154,6 +154,18 @@ export async function signUp({ password, ...userData }: SignUpParams) {
       stack: error?.stack,
     });
 
+    // Build a human-readable message to return to the UI so the user (and you)
+    // can see the REAL cause without opening the Netlify logs. Dwolla puts field
+    // validation details in body._embedded.errors; Appwrite uses error.message.
+    const dwollaErrors = error?.body?._embedded?.errors;
+    const readable =
+      (Array.isArray(dwollaErrors) && dwollaErrors.length
+        ? dwollaErrors.map((e: any) => `${e.path ?? ''} ${e.message}`.trim()).join('; ')
+        : null) ||
+      error?.body?.message ||
+      error?.message ||
+      'Unknown error';
+
     // Compensating deletes in reverse creation order so a failed attempt never
     // leaves an orphaned Appwrite account that would block retrying with the
     // same email. Each step is best-effort and must not mask the original error.
@@ -181,7 +193,7 @@ export async function signUp({ password, ...userData }: SignUpParams) {
       console.error('Rollback: could not initialize admin client', rollbackErr);
     }
 
-    return null;
+    return parseStringify({ error: readable });
   }
 }
 
