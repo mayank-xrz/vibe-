@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  # Do NOT set publish to "out" — this is a server-rendered Next.js app, not a
+  # static export. The official plugin wires up the publish dir and functions.
+  publish = ".next"
+
+[build.environment]
+  # Next.js 14 needs Node 18+. Pin to 20 LTS for reproducible builds.
+  NODE_VERSION = "20"
+
+# Enables SSR, Server Actions and route handlers as Netlify Functions.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -7,7 +7,8 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_SITE_URL:
+      process.env.NEXT_PUBLIC_SITE_URL || 'https://singular-cannoli-323f40.netlify.app',
   },
 };
 export default nextConfig;
