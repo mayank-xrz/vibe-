@@ -9,6 +9,9 @@ import { createTransfer } from '@/lib/actions/dwolla.actions';
 import { createTransaction } from '@/lib/actions/bank.actions';
 import { getBank, getBankByAccountId } from '@/lib/actions/bank.actions';
 import { decryptId } from '@/lib/utils';
+import BankDropdown from './BankDropdown';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const transferSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -87,17 +90,11 @@ const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
 
       <div className="flex flex-col gap-1.5">
         <label className="text-14 font-medium text-gray-700">Select Source Bank</label>
-        <select
-          {...form.register('senderBank')}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select bank account</option>
-          {accounts.map((account) => (
-            <option key={account.id} value={account.appwriteItemId}>
-              {account.name} — {account.mask} (${account.currentBalance.toFixed(2)})
-            </option>
-          ))}
-        </select>
+        <BankDropdown
+          accounts={accounts}
+          setValue={form.setValue}
+          otherStyles="!w-full"
+        />
         {form.formState.errors.senderBank && (
           <p className="text-12 text-red-500">{form.formState.errors.senderBank.message}</p>
         )}
@@ -163,27 +160,19 @@ const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
       </div>
 
       <div className="payment-transfer_btn-box">
-        <button
+        <Button
           type="submit"
           disabled={isLoading}
-          className="payment-transfer_btn"
-          style={{
-            background: 'linear-gradient(90deg, #0179FE 0%, #4893FF 100%)',
-            color: 'white',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            fontWeight: 600,
-            border: 'none',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            opacity: isLoading ? 0.5 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}
+          className="payment-transfer_btn bg-bank-gradient w-full"
         >
-          {isLoading ? 'Sending...' : 'Transfer Funds'}
-        </button>
+          {isLoading ? (
+            <>
+              <Loader2 size={20} className="animate-spin mr-2" /> Sending...
+            </>
+          ) : (
+            'Transfer Funds'
+          )}
+        </Button>
       </div>
     </form>
   );

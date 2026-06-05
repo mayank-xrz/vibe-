@@ -1,5 +1,6 @@
 import { getCategoryStyles } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 const Category = ({ category }: { category: CategoryCount }) => {
   const { name, count, totalCount } = category;
@@ -16,12 +17,7 @@ const Category = ({ category }: { category: CategoryCount }) => {
           <h2 className={cn('font-medium', textColor)}>{name}</h2>
           <h3 className="font-normal text-gray-600">{count} transactions</h3>
         </div>
-        <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
-          <div
-            className={cn('h-full rounded-full', backgroundColor)}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
+        <Progress value={percentage} indicatorClassName={backgroundColor} />
       </div>
     </div>
   );

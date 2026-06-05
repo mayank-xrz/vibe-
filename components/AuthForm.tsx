@@ -10,6 +10,9 @@ import { useRouter } from 'next/navigation';
 import { signIn, signUp } from '@/lib/actions/user.actions';
 import { authFormSchema } from '@/lib/utils';
 import CustomInput from './CustomInput';
+import { Form } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const AuthForm = ({ type }: { type: string }) => {
   const router = useRouter();
@@ -84,6 +87,7 @@ const AuthForm = ({ type }: { type: string }) => {
           </h1>
         </div>
       </header>
+      <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {type === 'sign-up' && (
           <>
@@ -157,22 +161,21 @@ const AuthForm = ({ type }: { type: string }) => {
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <div className="flex flex-col gap-4">
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
-            className="text-16 rounded-lg border border-bankGradient bg-bank-gradient font-semibold text-white shadow-form w-full py-3 px-4 disabled:opacity-50 cursor-pointer"
-            style={{ background: 'linear-gradient(90deg, #0179FE 0%, #4893FF 100%)' }}
+            className="text-16 bg-bank-gradient font-semibold text-white w-full py-3 px-4 h-auto"
           >
             {isLoading ? (
               <>
-                <span>Loading...</span>
+                <Loader2 size={20} className="animate-spin mr-2" /> Loading...
               </>
             ) : type === 'sign-in' ? (
               'Sign In'
             ) : (
               'Sign Up'
             )}
-          </button>
+          </Button>
         </div>
         <footer className="flex justify-center gap-1">
           <p className="text-14 font-normal text-gray-600">
@@ -186,6 +189,7 @@ const AuthForm = ({ type }: { type: string }) => {
           </Link>
         </footer>
       </form>
+      </Form>
     </section>
   );
 };
