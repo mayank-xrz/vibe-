@@ -69,7 +69,7 @@ const AuthForm = ({ type }: { type: string }) => {
         }
       } else {
         const response = await signIn({ email: data.email, password: data.password });
-        if (response) {
+        if (response && !response.error) {
           toast({
             variant: 'success',
             title: 'Signed in',
@@ -77,11 +77,12 @@ const AuthForm = ({ type }: { type: string }) => {
           });
           router.push('/');
         } else {
-          setError('Invalid email or password.');
+          const reason = response?.error || 'Invalid email or password.';
+          setError(`Sign in failed: ${reason}`);
           toast({
             variant: 'destructive',
             title: 'Sign in failed',
-            description: 'Invalid email or password.',
+            description: reason,
           });
         }
       }

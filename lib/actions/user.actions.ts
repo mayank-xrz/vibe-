@@ -52,11 +52,24 @@ export async function signIn({ email, password }: { email: string; password: str
       secure: true,
     });
 
+    // Session is valid — auth succeeded. Fetch the DB profile separately so a
+    // missing/misconfigured collection ID doesn't make login look broken.
     const user = await getUserInfo({ userId: session.userId });
+    if (!user) {
+      // Auth worked but the DB document wasn't found. Return a minimal object
+      // so the form knows login succeeded and can redirect to '/'.
+      // The dashboard will handle missing profile gracefully.
+      console.warn('signIn: session created but getUserInfo returned null for userId', session.userId,
+        '— check APPWRITE_DATABASE_ID and APPWRITE_USER_COLLECTION_ID in Netlify env vars.');
+      return parseStringify({ $id: session.userId, email });
+    }
+
     return parseStringify(user);
-  } catch (error) {
-    console.error('Sign in error:', error);
-    return null;
+  } catch (error: any) {
+    const msg = error?.message || error?.type || JSON.stringify(error?.body) || 'unknown';
+    console.error('Sign in error:', msg, { status: error?.status, code: error?.code });
+    // Return the real reason so the UI can show it.
+    return parseStringify({ error: msg });
   }
 }
 
