@@ -135,6 +135,42 @@ Add these in **Netlify → Site settings → Environment variables** (or GitHub 
 | `NEXT_PUBLIC_SITE_URL` | Build time |
 | All others | Runtime (server only) |
 
+---
+
+## Demo / Judge Login
+
+> **This is NOT an auth backdoor.** The demo account is a real user created through the exact same sign-up flow as any other account. It logs in at the normal `/sign-in` page.
+
+The live app at **https://singular-cannoli-323f40.netlify.app** has a pre-seeded demo account with a linked sandbox bank and sample transactions. Judges can log in immediately without registering:
+
+| Field | Value |
+|---|---|
+| **URL** | https://singular-cannoli-323f40.netlify.app/sign-in |
+| **Email** | *(set in `DEMO_EMAIL` env var — ask the submitter)* |
+| **Password** | *(set in `DEMO_PASSWORD` env var — ask the submitter)* |
+
+The dashboard shows real Plaid sandbox data: account balance, transaction history, spending categories, and a linked bank card.
+
+### Re-seeding the demo account
+
+If you need to recreate the account (e.g. after clearing the Appwrite project):
+
+1. Add to `.env.local`:
+   ```env
+   DEMO_EMAIL=demo@horizon-banking.com
+   DEMO_PASSWORD=Demo1234!
+   ```
+   (plus all standard Appwrite / Plaid / Dwolla credentials)
+
+2. Run:
+   ```bash
+   npm run seed:demo
+   ```
+
+   The script is idempotent — safe to re-run. It skips any step that already exists (user account, bank link) and prints the exact login at the end.
+
+---
+
 ### 3. Appwrite Database Setup
 
 Create a database and three collections:
