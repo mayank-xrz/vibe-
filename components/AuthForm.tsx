@@ -191,7 +191,7 @@ const AuthForm = ({ type }: { type: string }) => {
           label="Password"
           placeholder="Enter your password"
         />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p role="alert" className="text-red-500 text-sm">{error}</p>}
         <div className="flex flex-col gap-4">
           <Button
             type="submit"

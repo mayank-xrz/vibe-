@@ -38,17 +38,8 @@ const PlaidLink = ({ user, variant }: { user: User; variant?: 'primary' | 'ghost
       <button
         onClick={() => open()}
         disabled={!ready}
-        className="plaidlink-primary"
-        style={{
-          background: 'linear-gradient(90deg, #0179FE 0%, #4893FF 100%)',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontWeight: 600,
-          cursor: ready ? 'pointer' : 'not-allowed',
-          opacity: ready ? 1 : 0.5,
-          border: 'none',
-        }}
+        aria-label="Connect a bank account with Plaid"
+        className="bg-bank-gradient rounded-lg border-none px-6 py-3 font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       >
         Connect Bank
       </button>
