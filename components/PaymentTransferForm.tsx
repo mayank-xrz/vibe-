@@ -17,7 +17,10 @@ import { useToast } from '@/hooks/use-toast';
 const transferSchema = z.object({
   email: z.string().email('Invalid email address'),
   name: z.string().min(4, 'Transfer note must be at least 4 characters'),
-  amount: z.string().min(4, 'Amount must be at least 4 characters'),
+  amount: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Enter a valid amount, e.g. 5.00')
+    .refine((v) => Number(v) > 0, 'Amount must be greater than zero'),
   senderBank: z.string().min(4, 'Please select a valid bank account'),
   sharableId: z.string().min(8, 'Please enter a valid sharable ID'),
 });
@@ -64,7 +67,17 @@ const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
 
       const transfer = await createTransfer(transferParams);
 
-      if (transfer) {
+      if (!transfer) {
+        toast({
+          variant: 'destructive',
+          title: 'Transfer failed',
+          description:
+            'The transfer could not be completed. Both accounts need a verified funding source.',
+        });
+        return;
+      }
+
+      {
         await createTransaction({
           name: data.name,
           amount: data.amount,
@@ -118,7 +131,7 @@ const PaymentTransferForm = ({ accounts }: { accounts: Account[] }) => {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-14 font-medium text-gray-700">Transfer Note (Optional)</label>
+        <label className="text-14 font-medium text-gray-700">Transfer Note</label>
         <textarea
           {...form.register('name')}
           placeholder="Write a short note here"

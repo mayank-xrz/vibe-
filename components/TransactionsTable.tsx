@@ -20,6 +20,17 @@ const CategoryBadge = ({ category }: { category: string }) => {
 };
 
 const TransactionsTable = ({ transactions }: { transactions: Transaction[] }) => {
+  if (!transactions?.length) {
+    return (
+      <div className="flex w-full flex-col items-center gap-2 py-12 text-center">
+        <p className="text-16 font-semibold text-gray-900">No transactions yet</p>
+        <p className="text-14 text-gray-600">
+          Transactions will appear here once there is activity on this account.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto">
       <Table>

@@ -4,6 +4,7 @@ import Pagination from '@/components/Pagination';
 import { getAccounts, getAccount } from '@/lib/actions/bank.actions';
 import { getLoggedInUser } from '@/lib/actions/user.actions';
 import { formatAmount } from '@/lib/utils';
+import EmptyState from '@/components/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +17,32 @@ const TransactionHistory = async ({
   const loggedIn = await getLoggedInUser();
   const accounts = await getAccounts({ userId: loggedIn?.$id });
 
-  if (!accounts) return null;
-
-  const accountsData = accounts?.data;
+  const accountsData = accounts?.data ?? [];
   const appwriteItemId = (searchParams?.id as string) || accountsData?.[0]?.appwriteItemId;
-  const account = await getAccount({ appwriteItemId });
+  const account = appwriteItemId ? await getAccount({ appwriteItemId }) : null;
+
+  if (!account) {
+    return (
+      <div className="transactions">
+        <div className="transactions-header">
+          <HeaderBox
+            title="Transaction History"
+            subtext="See your bank details and transactions."
+          />
+        </div>
+        <EmptyState
+          title={accountsData.length === 0 ? 'No bank accounts linked yet' : 'Could not load this account'}
+          subtext={
+            accountsData.length === 0
+              ? 'Connect a bank from the dashboard to start seeing your transaction history.'
+              : 'There was a problem fetching this account. Please try again shortly.'
+          }
+          user={loggedIn}
+          showConnectBank={accountsData.length === 0}
+        />
+      </div>
+    );
+  }
 
   const rowsPerPage = 10;
   const totalPages = Math.ceil((account?.transactions?.length ?? 0) / rowsPerPage);
