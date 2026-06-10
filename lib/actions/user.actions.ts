@@ -5,12 +5,10 @@ import { createAdminClient, createSessionClient } from '../server/appwrite';
 import { cookies } from 'next/headers';
 import { parseStringify, formatDateOfBirth, assertRequiredEnv } from '../utils';
 import { createDwollaCustomer, deactivateDwollaCustomer } from './dwolla.actions';
-import { redirect } from 'next/navigation';
 
 const {
   APPWRITE_DATABASE_ID: DATABASE_ID,
   APPWRITE_USER_COLLECTION_ID: USER_COLLECTION_ID,
-  APPWRITE_BANK_COLLECTION_ID: BANK_COLLECTION_ID,
 } = process.env;
 
 export async function getLoggedInUser() {

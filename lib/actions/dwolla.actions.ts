@@ -49,6 +49,19 @@ export async function createFundingSource(params: AddFundingSourceParams) {
   }
 }
 
+// Compensating action for bank linking: removes a funding source created
+// earlier in a flow whose later step failed.
+export async function removeFundingSource(fundingSourceUrl: string) {
+  try {
+    const client = getDwollaClient();
+    await client.post(fundingSourceUrl, { removed: true });
+    return true;
+  } catch (err) {
+    console.error('Removing funding source failed:', err);
+    return false;
+  }
+}
+
 // Compensating action for atomic signup: Dwolla customers cannot be hard
 // deleted, but they can be deactivated/suspended. We POST a status update to
 // roll back a customer created earlier in a signup flow that later failed.

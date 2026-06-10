@@ -55,12 +55,19 @@ export function authFormSchema(type: string) {
   return z.object({
     email: z.string().email(),
     password: z.string().min(8),
-    firstName: type === 'sign-up' ? z.string().min(3) : z.string().optional(),
-    lastName: type === 'sign-up' ? z.string().min(3) : z.string().optional(),
-    address1: type === 'sign-up' ? z.string().max(50) : z.string().optional(),
-    city: type === 'sign-up' ? z.string().max(100) : z.string().optional(),
-    state: type === 'sign-up' ? z.string().min(2).max(2) : z.string().optional(),
-    postalCode: type === 'sign-up' ? z.string().min(3).max(6) : z.string().optional(),
+    // Min/max bounds mirror the Appwrite collection attribute sizes.
+    firstName: type === 'sign-up' ? z.string().min(1, 'Required').max(256) : z.string().optional(),
+    lastName: type === 'sign-up' ? z.string().min(1, 'Required').max(256) : z.string().optional(),
+    address1: type === 'sign-up' ? z.string().min(1, 'Required').max(256) : z.string().optional(),
+    city: type === 'sign-up' ? z.string().min(1, 'Required').max(256) : z.string().optional(),
+    state:
+      type === 'sign-up'
+        ? z.string().length(2, 'Use the 2-letter code, e.g. CA').regex(/^[A-Za-z]{2}$/, 'Letters only, e.g. NY')
+        : z.string().optional(),
+    postalCode:
+      type === 'sign-up'
+        ? z.string().regex(/^\d{5}(-\d{4})?$/, 'Use a 5-digit ZIP, e.g. 90210')
+        : z.string().optional(),
     dateOfBirth:
       type === 'sign-up'
         ? z

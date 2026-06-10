@@ -3,7 +3,7 @@
 import { ID, Query } from 'node-appwrite';
 import { createAdminClient } from '../server/appwrite';
 import { plaidClient } from '../plaid';
-import { createFundingSource } from './dwolla.actions';
+import { createFundingSource, removeFundingSource } from './dwolla.actions';
 import { parseStringify, encryptId, extractCustomerIdFromUrl } from '../utils';
 import { CountryCode, ProcessorTokenCreateRequestProcessorEnum, Products } from 'plaid';
 import { revalidatePath } from 'next/cache';
@@ -69,7 +69,7 @@ export async function exchangePublicToken({ publicToken, user }: exchangePublicT
     });
     if (!fundingSourceUrl) throw new Error('No funding source URL');
 
-    await createBankAccount({
+    const bankAccount = await createBankAccount({
       userId: user.$id,
       bankId: itemId,
       accountId: accountData.account_id,
@@ -77,11 +77,17 @@ export async function exchangePublicToken({ publicToken, user }: exchangePublicT
       fundingSourceUrl,
       sharableId: encryptId(accountData.account_id),
     });
+    if (!bankAccount) {
+      // Compensate: remove the just-created funding source so a failed DB
+      // write doesn't leave an orphaned Dwolla resource.
+      await removeFundingSource(fundingSourceUrl);
+      throw new Error('Failed to store bank account');
+    }
 
     revalidatePath('/');
     return parseStringify({ publicTokenExchange: 'complete' });
-  } catch (err) {
-    console.error('Exchange public token error:', err);
+  } catch (err: any) {
+    console.error('Exchange public token error:', err?.response?.data?.error_message ?? err?.message ?? err);
     return null;
   }
 }
@@ -95,7 +101,8 @@ export async function getBanks({ userId }: getBanksProps) {
       [Query.equal('userId', [userId])]
     );
     return parseStringify(banks.documents);
-  } catch {
+  } catch (err: any) {
+    console.error('getBanks failed:', err?.message ?? err);
     return null;
   }
 }
@@ -105,7 +112,8 @@ export async function getBank({ documentId }: getBankProps) {
     const { database } = await createAdminClient();
     const bank = await database.getDocument(DATABASE_ID!, BANK_COLLECTION_ID!, documentId);
     return parseStringify(bank);
-  } catch {
+  } catch (err: any) {
+    console.error('getBank failed:', err?.message ?? err);
     return null;
   }
 }
@@ -120,7 +128,8 @@ export async function getBankByAccountId({ accountId }: getBankByAccountIdProps)
     );
     if (bank.total !== 1) return null;
     return parseStringify(bank.documents[0]);
-  } catch {
+  } catch (err: any) {
+    console.error('getBankByAccountId failed:', err?.message ?? err);
     return null;
   }
 }
@@ -156,7 +165,8 @@ export async function getAccounts({ userId }: { userId: string }) {
     const totalBanks = accounts.length;
     const totalCurrentBalance = accounts.reduce((total, account) => total + account.currentBalance, 0);
     return parseStringify({ data: accounts, totalBanks, totalCurrentBalance });
-  } catch {
+  } catch (err: any) {
+    console.error('getAccounts failed:', err?.response?.data?.error_message ?? err?.message ?? err);
     return null;
   }
 }
@@ -193,7 +203,8 @@ export async function getAccount({ appwriteItemId }: { appwriteItemId: string })
     ].sort((a, b) => new Date(b.date ?? b.$createdAt).getTime() - new Date(a.date ?? a.$createdAt).getTime());
 
     return parseStringify({ data: account, transactions: allTransactions });
-  } catch {
+  } catch (err: any) {
+    console.error('getAccount failed:', err?.response?.data?.error_message ?? err?.message ?? err);
     return null;
   }
 }
@@ -267,7 +278,8 @@ export async function getTransactionsByBankId({ bankId }: { bankId: string }) {
         ...receiverTransactions.documents,
       ],
     });
-  } catch {
+  } catch (err: any) {
+    console.error('getTransactionsByBankId failed:', err?.message ?? err);
     return null;
   }
 }
@@ -296,7 +308,8 @@ export async function createTransaction(transaction: {
     // Refresh dashboard balances/transactions after a successful transfer.
     revalidatePath('/');
     return parseStringify(newTransaction);
-  } catch {
+  } catch (err: any) {
+    console.error('createTransaction failed:', err?.message ?? err);
     return null;
   }
 }
