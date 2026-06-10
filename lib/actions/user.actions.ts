@@ -19,7 +19,19 @@ export async function getLoggedInUser() {
     const result = await account.get();
 
     const user = await getUserInfo({ userId: result.$id });
-    return parseStringify(user);
+    if (user) return parseStringify(user);
+
+    // Session is valid but the Users DB document is missing/unreadable.
+    // Fall back to the auth account basics instead of returning null, which
+    // would bounce a legitimately logged-in user back to /sign-in in a loop.
+    const [firstName = 'User', ...rest] = (result.name || '').split(' ');
+    return parseStringify({
+      $id: result.$id,
+      userId: result.$id,
+      email: result.email,
+      firstName,
+      lastName: rest.join(' '),
+    });
   } catch {
     return null;
   }
@@ -34,7 +46,9 @@ export async function getUserInfo({ userId }: getUserInfoProps) {
       [Query.equal('userId', [userId])]
     );
     return parseStringify(user.documents[0]);
-  } catch {
+  } catch (error: any) {
+    console.error('getUserInfo failed:', error?.message ?? error,
+      '— check APPWRITE_DATABASE_ID / APPWRITE_USER_COLLECTION_ID.');
     return null;
   }
 }
