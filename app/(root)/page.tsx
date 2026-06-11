@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import HeaderBox from '@/components/HeaderBox';
+
+export const metadata: Metadata = { title: 'Dashboard — Horizon' };
 import TotalBalanceBox from '@/components/TotalBalanceBox';
 import RecentTransactions from '@/components/RecentTransactions';
 import RightSidebar from '@/components/RightSidebar';

@@ -52,38 +52,34 @@ const AuthForm = ({ type }: { type: string }) => {
         };
         const newUser = await signUp(userData);
         if (newUser && !newUser.error) {
-          toast({
-            variant: 'success',
-            title: 'Account created',
-            description: 'Welcome to Horizon!',
-          });
+          toast({ variant: 'success', title: 'Account created', description: 'Welcome to Horizon!' });
           router.push('/');
         } else {
-          const reason = newUser?.error || 'Please try again.';
-          setError(`Sign up failed: ${reason}`);
-          toast({
-            variant: 'destructive',
-            title: 'Sign up failed',
-            description: reason,
-          });
+          const raw = (newUser?.error ?? '') as string;
+          const reason = raw.toLowerCase().includes('user_already_exists') || raw.toLowerCase().includes('already registered')
+            ? 'That email is already registered. Try signing in instead.'
+            : raw.toLowerCase().includes('dwolla') || raw.toLowerCase().includes('customer')
+            ? 'Could not create your payment profile. Check your name, address, and date of birth (YYYY-MM-DD).'
+            : raw.toLowerCase().includes('document') || raw.toLowerCase().includes('attribute')
+            ? 'Account setup incomplete — contact support if this persists.'
+            : raw || 'Sign up failed. Please try again.';
+          setError(reason);
+          toast({ variant: 'destructive', title: 'Sign up failed', description: reason });
         }
       } else {
         const response = await signIn({ email: data.email, password: data.password });
         if (response && !response.error) {
-          toast({
-            variant: 'success',
-            title: 'Signed in',
-            description: 'Welcome back!',
-          });
+          toast({ variant: 'success', title: 'Welcome back!', description: 'Signed in successfully.' });
           router.push('/');
         } else {
-          const reason = response?.error || 'Invalid email or password.';
-          setError(`Sign in failed: ${reason}`);
-          toast({
-            variant: 'destructive',
-            title: 'Sign in failed',
-            description: reason,
-          });
+          const raw = (response?.error ?? '') as string;
+          const reason = raw.toLowerCase().includes('invalid') || raw.toLowerCase().includes('credentials') || raw.toLowerCase().includes('incorrect')
+            ? 'Incorrect email or password. Please try again.'
+            : raw.toLowerCase().includes('not configured') || raw.toLowerCase().includes('missing')
+            ? 'Service is temporarily unavailable. Please try again later.'
+            : raw || 'Sign in failed. Please try again.';
+          setError(reason);
+          toast({ variant: 'destructive', title: 'Sign in failed', description: reason });
         }
       }
     } catch (err) {

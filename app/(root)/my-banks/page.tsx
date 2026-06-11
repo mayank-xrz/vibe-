@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import HeaderBox from '@/components/HeaderBox';
+
+export const metadata: Metadata = { title: 'My Banks — Horizon' };
 import BankCard from '@/components/BankCard';
 import { getAccounts } from '@/lib/actions/bank.actions';
 import { getLoggedInUser } from '@/lib/actions/user.actions';

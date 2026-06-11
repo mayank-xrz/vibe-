@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import HeaderBox from '@/components/HeaderBox';
+
+export const metadata: Metadata = { title: 'Transaction History — Horizon' };
 import TransactionsTable from '@/components/TransactionsTable';
 import Pagination from '@/components/Pagination';
 import { getAccounts, getAccount } from '@/lib/actions/bank.actions';

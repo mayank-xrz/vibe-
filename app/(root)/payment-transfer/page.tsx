@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import HeaderBox from '@/components/HeaderBox';
+
+export const metadata: Metadata = { title: 'Payment Transfer — Horizon' };
 import PaymentTransferForm from '@/components/PaymentTransferForm';
 import { getAccounts } from '@/lib/actions/bank.actions';
 import { getLoggedInUser } from '@/lib/actions/user.actions';
