@@ -19,12 +19,13 @@ const MobileNav = ({ user }: { user: User }) => {
   return (
     <section className="w-full max-w-[264px]">
       <Sheet>
-        <SheetTrigger>
+        <SheetTrigger aria-label="Open navigation menu">
           <Image
             src="/icons/hamburger.svg"
             width={30}
             height={30}
-            alt="menu"
+            alt=""
+            aria-hidden
             className="cursor-pointer"
           />
         </SheetTrigger>
